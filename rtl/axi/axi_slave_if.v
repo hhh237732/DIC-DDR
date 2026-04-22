@@ -108,7 +108,8 @@ module axi_slave_if #(
     );
 
     assign s_axi_awready = !aw_full;
-    assign s_axi_arready = !ar_full;
+    // 简化实现：限制同一时刻仅 1 笔在途读事务，避免共享计数器歧义
+    assign s_axi_arready = !ar_full && (r_beats_rem == 0);
 
     wire w_full, w_empty;
     wire [WW-1:0] w_dout;

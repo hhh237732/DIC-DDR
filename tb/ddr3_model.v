@@ -42,8 +42,11 @@ module ddr3_model (
         input [`DDR_BANK_BITS-1:0] f_bank;
         input [`DDR_ROW_BITS-1:0]  f_row;
         input [`DDR_COL_BITS-1:0]  f_col;
+        reg [`DDR_ROW_BITS+`DDR_BANK_BITS+`DDR_COL_BITS-1:0] full_addr;
         begin
-            pack_addr = {f_row[9:0], f_bank, f_col[6:0]};
+            // 使用完整 row/bank/col 位宽，并折叠到仿真内存地址宽度
+            full_addr = {f_row, f_bank, f_col};
+            pack_addr = full_addr[MEM_AW-1:0] ^ full_addr[MEM_AW+7:8];
         end
     endfunction
 
@@ -113,7 +116,7 @@ module ddr3_model (
                         bank_open[bank] <= 1'b0;
                     end
                 end
-                // REF：仅作为接受，不建模详细阻塞
+                // REF：仅作为接收，不建模详细阻塞
                 if (!ras_n && !cas_n && we_n) begin
                     // no-op in simplified model
                 end

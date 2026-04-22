@@ -32,7 +32,8 @@ module refresh_ctrl (
                 if (ref_cnt < `tREFI) ref_cnt <= ref_cnt + 1'b1;
                 else begin
                     refresh_pending <= 1'b1;
-                    overdue_cnt <= overdue_cnt + 1'b1;
+                    if (&overdue_cnt) overdue_cnt <= overdue_cnt;
+                    else              overdue_cnt <= overdue_cnt + 1'b1;
                 end
                 if (overdue_cnt > (`tREFI * 8)) urgent_refresh <= 1'b1;
             end

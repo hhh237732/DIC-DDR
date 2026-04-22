@@ -51,7 +51,7 @@ module sync_fifo #(
                 2'b11: begin
                     mem[wr_ptr] <= wr_data;
                     wr_ptr      <= wr_ptr + 1'b1;
-                    rd_ptr       <= rd_ptr + 1'b1;
+                    rd_ptr      <= rd_ptr + 1'b1;
                 end
                 default: begin
                 end

@@ -314,7 +314,7 @@ module ddr3_ctrl_top (
                 if (dfi_rd_valid_int && !rtag_empty && rb_in_ready) begin
                     rb_in_valid <= 1'b1;
                     rb_in_data  <= dfi_rd_data_int;
-                    rb_in_last  <= (rtag_level == 7'd1);
+                    rb_in_last  <= rtag_rd_data[0];
                     rb_in_id    <= rtag_rd_data[`AXI_ID_WIDTH:1];
                     rtag_rd_en  <= 1'b1;
                 end
@@ -329,7 +329,7 @@ module ddr3_ctrl_top (
                             cur_bank <= l2_bank;
                             cur_row  <= l2_row;
                             cur_col  <= l2_col;
-                            cur_beats<= {1'b0,l2_len} + 9'd1;
+                            cur_beats <= {1'b0,l2_len} + 9'd1;
                             cur_auto_pre <= l2_auto_pre;
                             if (bank_row_open && bank_open_row != l2_row) sch_st <= SCH_PRE;
                             else if (!bank_row_open) sch_st <= SCH_ACT;

@@ -57,6 +57,7 @@ module cmd_split #(
 
     wire [10:0] col_room = 11'd1024 - {1'b0, map_col};
     wire [8:0]  chunk_beats = (beats_left > col_room[8:0]) ? col_room[8:0] : beats_left;
+    wire [8:0]  safe_chunk_beats = (chunk_beats == 0) ? 9'd1 : chunk_beats;
 
     assign in_ready = (!active);
 
@@ -94,20 +95,19 @@ module cmd_split #(
                 out_bank  <= map_bank;
                 out_row   <= map_row;
                 out_col   <= map_col;
-                if (chunk_beats == 0) out_len <= 8'd0;
-                else                  out_len <= chunk_beats[7:0] - 8'd1;
+                out_len   <= safe_chunk_beats[7:0] - 8'd1;
                 out_valid <= 1'b1;
             end
 
             if (out_valid && out_ready) begin
                 out_valid <= 1'b0;
-                if (beats_left <= chunk_beats) begin
+                if (beats_left <= safe_chunk_beats) begin
                     active     <= 1'b0;
                     busy       <= 1'b0;
                     beats_left <= 9'd0;
                 end else begin
-                    beats_left <= beats_left - chunk_beats;
-                    cur_addr   <= cur_addr + (chunk_beats << beat_bytes_lg2);
+                    beats_left <= beats_left - safe_chunk_beats;
+                    cur_addr   <= cur_addr + (safe_chunk_beats << beat_bytes_lg2);
                 end
             end
         end
