@@ -1,0 +1,11 @@
+# 仿真输出
+sim/build/
+*.vvp
+*.vcd
+*.fst
+*.log
+
+# 常见编辑器
+*.swp
+*.swo
+.DS_Store
