@@ -1,0 +1,58 @@
+================================================================================
+DDR3 Controller — Theoretical Bandwidth Analysis
+================================================================================
+
+Clock & Data Rate
+─────────────────────────────────────────────────────────────────────────────
+  Controller clock (fclk):       400 MHz
+  DDR data rate:                 2 × 400 = 800 MT/s  (DDR3-800 / CK=400MHz)
+  DQ bus width:                  32 bits = 4 bytes
+  Bus transfers per second:      800 × 10^6 transfers/s
+
+Peak Theoretical Bandwidth
+─────────────────────────────────────────────────────────────────────────────
+  BW_peak = 800 MT/s × 4 bytes = 3,200 MB/s = 3.20 GB/s
+
+Effective Bandwidth (accounting for protocol overhead)
+─────────────────────────────────────────────────────────────────────────────
+  Burst length:  BL8 (8 beats per access)
+  tRCD:          11 ck = 27.5 ns  (row activation latency)
+  CL:            11 ck = 27.5 ns  (read latency)
+  CWL:            8 ck = 20.0 ns  (write latency)
+
+  Read efficiency (page-hit, single bank):
+    Useful data beats:    8 per CAS
+    CAS interval (tCCD): 4 ck minimum
+    BW_read_ideal = 8 beats × 4B / (4 ck × 2.5 ns) = 3.20 GB/s (100%)
+
+  Read efficiency (with row open latency included):
+    First access overhead: tRCD + CL = 22 ck
+    Subsequent hits:       CL + BL = 11+4 = 15 ck per 32B
+    BW_read_sustained ≈ 32B / (15 × 2.5 ns) ≈ 853 MB/s per bank
+    8 banks interleaved:  ≈ 2.56 GB/s  (80% of peak)
+
+  Write efficiency:
+    CWL = 8, BL/2 = 4  → WR occupies 12 ck including preamble
+    BW_write_sustained ≈ 32B / (12 × 2.5 ns) ≈ 1.07 GB/s per bank
+    8 banks interleaved:  ≈ 2.13 GB/s  (67% of peak)
+
+Refresh Overhead
+─────────────────────────────────────────────────────────────────────────────
+  tREFI = 6,240 ck (7.8 µs at 800 MHz tCK)
+  tRFC  =   110 ck (137.5 ns)
+  Overhead = tRFC / tREFI = 110 / 6240 = 1.76%
+  Effective BW reduction:  × (1 - 0.0176) ≈ × 0.982
+
+Summary
+─────────────────────────────────────────────────────────────────────────────
+  Peak read  bandwidth:   3.20 GB/s
+  Peak write bandwidth:   3.20 GB/s
+  Sustained read  (est):  2.51 GB/s  (after refresh overhead)
+  Sustained write (est):  2.09 GB/s  (after refresh overhead)
+  Mixed R/W (50:50):      2.30 GB/s  (estimated)
+
+================================================================================
+NOTE: Real-world bandwidth depends on access patterns, bank interleaving,
+      page-hit rate, and bus utilisation. The two-level reorder buffer
+      targets ≥70% page-hit rate, yielding ~80% of peak theoretical BW.
+================================================================================

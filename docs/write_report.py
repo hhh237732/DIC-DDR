@@ -1,4 +1,4 @@
-# DDR3 控制器项目实现报告 v2
+content = """# DDR3 控制器项目实现报告 v2
 
 > **版本**：v2.0 ｜ **日期**：2025-07 ｜ **作者**：数字 IC 设计组 ｜ **语言**：Verilog-2012
 
@@ -182,44 +182,22 @@ AXI addr[ 9: 0] → CA[ 9:0]  （Column 地址）
 
 ```mermaid
 graph LR
-    AXI_Master["AXI Master
-(CPU/DMA)"]
+    AXI_Master["AXI Master\n(CPU/DMA)"]
 
     subgraph DDR3_Controller["DDR3 控制器顶层 ddr3_ctrl_top"]
-        AXI_IF["axi_slave_if
-AXI4从端接口
-Outstanding=4"]
-        CMD_SPLIT["cmd_split
-行边界+4KB边界拆分"]
-        CMD_RO_L1["cmd_reorder_l1
-L1重排：页命中优先
-饥饿计数255阈值"]
-        CMD_RO_L2["cmd_reorder_l2
-L2重排：读写分组
-GROUP_MAX=8
-刷新优先"]
-        BANK_CTRL["bank_ctrl × 8
-每Bank独立FSM
-时序计数器"]
-        SCHED["scheduler
-PRE/ACT/RD/WR
-命令选择"]
-        REFRESH["refresh_ctrl
-自动刷新
-tREFI=6240"]
-        INIT["init_fsm
-14状态初始化
-MR0~MR3+ZQCL"]
-        DFI["dfi_if
-DFI接口
-CWL流水线
-phy_clk"]
+        AXI_IF["axi_slave_if\nAXI4从端接口\nOutstanding=4"]
+        CMD_SPLIT["cmd_split\n行边界+4KB边界拆分"]
+        CMD_RO_L1["cmd_reorder_l1\nL1重排：页命中优先\n饥饿计数255阈值"]
+        CMD_RO_L2["cmd_reorder_l2\nL2重排：读写分组\nGROUP_MAX=8\n刷新优先"]
+        BANK_CTRL["bank_ctrl × 8\n每Bank独立FSM\n时序计数器"]
+        SCHED["scheduler\nPRE/ACT/RD/WR\n命令选择"]
+        REFRESH["refresh_ctrl\n自动刷新\ntREFI=6240"]
+        INIT["init_fsm\n14状态初始化\nMR0~MR3+ZQCL"]
+        DFI["dfi_if\nDFI接口\nCWL流水线\nphy_clk"]
     end
 
-    PHY["DDR3 PHY
-(SSTL15)"]
-    DRAM["DDR3 SDRAM
-MT41J128M8"]
+    PHY["DDR3 PHY\n(SSTL15)"]
+    DRAM["DDR3 SDRAM\nMT41J128M8"]
 
     AXI_Master -->|"AR/AW/W/R/B"| AXI_IF
     AXI_IF -->|"cmd+data"| CMD_SPLIT
@@ -1214,20 +1192,13 @@ DDR3 控制器选择 AXI4 的原因：
 
 ```mermaid
 graph LR
-    RTL["RTL 代码
-（Verilog-2012）"]
-    LINT["Lint 检查
-（Spyglass/Verilator）"]
-    SYN["逻辑综合
-（Design Compiler）"]
-    FV["形式验证
-（Conformal/Formality）"]
-    STA["静态时序分析
-（PrimeTime）"]
-    NETLIST["门级网表
-（.v）"]
-    REPORTS["时序报告
-（.rpt）"]
+    RTL["RTL 代码\n（Verilog-2012）"]
+    LINT["Lint 检查\n（Spyglass/Verilator）"]
+    SYN["逻辑综合\n（Design Compiler）"]
+    FV["形式验证\n（Conformal/Formality）"]
+    STA["静态时序分析\n（PrimeTime）"]
+    NETLIST["门级网表\n（.v）"]
+    REPORTS["时序报告\n（.rpt）"]
 
     RTL --> LINT
     LINT --> SYN
@@ -1256,7 +1227,8 @@ set_option enabling_rule STARC  ;# 标准规则集
 
 ```bash
 # Verilator Lint（免费工具）
-verilator --lint-only -Wall -I./rtl     rtl/ddr3_ctrl_top.v rtl/cmd_split.v rtl/bank_ctrl.v ...
+verilator --lint-only -Wall -I./rtl \
+    rtl/ddr3_ctrl_top.v rtl/cmd_split.v rtl/bank_ctrl.v ...
 ```
 
 常见 Lint 问题及修复：
@@ -1342,10 +1314,13 @@ SDC 约束关键条目：
 
 ```tcl
 # 多周期路径（地址映射）
-set_multicycle_path 2 -setup     -from [get_pins cmd_split/*/bank_addr*]     -to   [get_pins cmd_reorder_l1/q_bank*]
+set_multicycle_path 2 -setup \
+    -from [get_pins cmd_split/*/bank_addr*] \
+    -to   [get_pins cmd_reorder_l1/q_bank*]
 
 # 虚假路径（初始化状态机到正常操作路径）
-set_false_path -from [get_cells init_fsm/S_DONE]                -to   [get_cells dfi_if/dfi_cs_n]
+set_false_path -from [get_cells init_fsm/S_DONE] \
+               -to   [get_cells dfi_if/dfi_cs_n]
 ```
 
 ---
@@ -1356,20 +1331,13 @@ set_false_path -from [get_cells init_fsm/S_DONE]                -to   [get_cells
 
 ```mermaid
 graph TB
-    TB["TestBench 顶层
-ddr3_ctrl_tb.v"]
-    DRV["AXI Driver
-生成读写事务"]
-    MON["AXI Monitor
-捕获所有通道"]
-    SB["Scoreboard
-功能检验+性能统计"]
-    COV["Coverage
-功能/代码/断言"]
-    REF["DDR3 Model
-行为级参考模型"]
-    DUT["DUT
-ddr3_ctrl_top"]
+    TB["TestBench 顶层\nddr3_ctrl_tb.v"]
+    DRV["AXI Driver\n生成读写事务"]
+    MON["AXI Monitor\n捕获所有通道"]
+    SB["Scoreboard\n功能检验+性能统计"]
+    COV["Coverage\n功能/代码/断言"]
+    REF["DDR3 Model\n行为级参考模型"]
+    DUT["DUT\nddr3_ctrl_top"]
 
     TB --> DRV
     TB --> MON
@@ -1953,3 +1921,9 @@ DIC-DDR/
 
 *本报告版权所有 © 2025 数字 IC 设计组。仅供学习参考。*
 *DDR3 Controller Project Implementation Report v2.0*
+"""
+
+with open('/home/runner/work/DIC-DDR/DIC-DDR/docs/project_report_v2.md', 'w', encoding='utf-8') as f:
+    f.write(content)
+
+print(f"Written {len(content.encode('utf-8'))} bytes")
