@@ -184,7 +184,7 @@ module axi_slave_if #(
                     req_v  <= 1'b1;
                     req_d  <= {1'b0, ar_dout};
                     r_beats_rem <= {1'b0, ar_dout[12:5]} + 9'd1;
-                    if (outstanding_rd_cnt < 3'd7)
+                    if (outstanding_rd_cnt < MAX_OUTSTANDING[2:0])
                         outstanding_rd_cnt <= outstanding_rd_cnt + 1'b1;
                 end else if (!aw_empty) begin
                     aw_pop <= 1'b1;
