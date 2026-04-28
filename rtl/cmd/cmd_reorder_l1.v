@@ -45,6 +45,7 @@ module cmd_reorder_l1 #(
     reg [`DDR_COL_BITS-1:0]  q_col  [0:DEPTH-1];
     reg [7:0]                q_len  [0:DEPTH-1];
     reg                      q_vld  [0:DEPTH-1];
+    reg [7:0]                q_starve[0:DEPTH-1];
 
     integer i;
     reg [AW:0] used;
@@ -56,17 +57,21 @@ module cmd_reorder_l1 #(
     reg hit_found;
     reg [AW-1:0] hit_idx;
     reg [AW-1:0] first_idx;
+    reg starve_found;
+    reg [AW-1:0] starve_idx;
 
     assign in_ready = (used < DEPTH);
 
     always @(*) begin
-        free_found = 1'b0;
-        free_idx   = {AW{1'b0}};
-        first_idx  = {AW{1'b0}};
-        sel_idx    = {AW{1'b0}};
-        sel_found  = 1'b0;
-        hit_found  = 1'b0;
-        hit_idx    = {AW{1'b0}};
+        free_found  = 1'b0;
+        free_idx    = {AW{1'b0}};
+        first_idx   = {AW{1'b0}};
+        sel_idx     = {AW{1'b0}};
+        sel_found   = 1'b0;
+        hit_found   = 1'b0;
+        hit_idx     = {AW{1'b0}};
+        starve_found = 1'b0;
+        starve_idx  = {AW{1'b0}};
 
         for (i = 0; i < DEPTH; i = i + 1) begin
             if (!q_vld[i] && !free_found) begin
@@ -89,8 +94,17 @@ module cmd_reorder_l1 #(
             end
         end
 
-        if (hit_found) sel_idx = hit_idx;
-        else           sel_idx = first_idx;
+        // Starvation check: if any entry starved to max, force-select it
+        for (i = 0; i < DEPTH; i = i + 1) begin
+            if (q_vld[i] && !starve_found && q_starve[i] >= 8'd255) begin
+                starve_found = 1'b1;
+                starve_idx   = i[AW-1:0];
+            end
+        end
+
+        if (starve_found)    sel_idx = starve_idx;
+        else if (hit_found)  sel_idx = hit_idx;
+        else                 sel_idx = first_idx;
     end
 
     always @(posedge clk or negedge rst_n) begin
@@ -104,18 +118,32 @@ module cmd_reorder_l1 #(
             out_col   <= {`DDR_COL_BITS{1'b0}};
             out_len   <= 8'd0;
             for (i = 0; i < DEPTH; i = i + 1) begin
-                q_vld[i] <= 1'b0;
+                q_vld[i]    <= 1'b0;
+                q_starve[i] <= 8'd0;
             end
         end else begin
             if (in_valid && in_ready && free_found) begin
-                q_vld[free_idx]  <= 1'b1;
-                q_rw[free_idx]   <= in_rw;
-                q_id[free_idx]   <= in_id;
-                q_bank[free_idx] <= in_bank;
-                q_row[free_idx]  <= in_row;
-                q_col[free_idx]  <= in_col;
-                q_len[free_idx]  <= in_len;
-                used             <= used + 1'b1;
+                q_vld[free_idx]    <= 1'b1;
+                q_rw[free_idx]     <= in_rw;
+                q_id[free_idx]     <= in_id;
+                q_bank[free_idx]   <= in_bank;
+                q_row[free_idx]    <= in_row;
+                q_col[free_idx]    <= in_col;
+                q_len[free_idx]    <= in_len;
+                q_starve[free_idx] <= 8'd0;
+                used               <= used + 1'b1;
+            end
+
+            // Starvation counter: increment all valid entries each cycle;
+            // reset on entry insertion or on selection
+            for (i = 0; i < DEPTH; i = i + 1) begin
+                if (in_valid && in_ready && free_found && free_idx == i[AW-1:0]) begin
+                    q_starve[i] <= 8'd0;
+                end else if (out_valid && out_ready && sel_idx == i[AW-1:0]) begin
+                    q_starve[i] <= 8'd0;
+                end else if (q_vld[i] && q_starve[i] < 8'd255) begin
+                    q_starve[i] <= q_starve[i] + 8'd1;
+                end
             end
 
             if (!out_valid && sel_found) begin

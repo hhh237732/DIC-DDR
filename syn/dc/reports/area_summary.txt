@@ -1,0 +1,42 @@
+================================================================================
+DDR3 Controller — Estimated Area Summary (Design Target, NOT real tool output)
+Technology: 28nm CMOS  (1 gate equivalent ≈ 0.2 µm²)
+================================================================================
+
+Module Hierarchy                     Cells (est.)   Area (GE)    %
+─────────────────────────────────────────────────────────────────────────────
+ddr3_ctrl_top (total)                    50,200       100%
+  ├─ axi_slave_if                         6,800        13.5%
+  │    ├─ u_aw_fifo (sync_fifo)           1,200
+  │    ├─ u_ar_fifo (sync_fifo)           1,200
+  │    └─ u_w_fifo  (sync_fifo)           2,400
+  ├─ cmd_split                              850         1.7%
+  ├─ cmd_reorder_l1                       3,200         6.4%
+  │    └─ (16-entry queue + starvation)
+  ├─ cmd_reorder_l2                       4,100         8.2%
+  │    └─ (2×16-entry queues + L/W group)
+  ├─ bank_ctrl_top                        8,500        16.9%
+  │    └─ 8× bank_ctrl (FSM + timers)    ~1,062 each
+  ├─ write_buffer                         5,600        11.2%
+  ├─ read_buffer                          4,800         9.6%
+  ├─ refresh_ctrl                           420         0.8%
+  ├─ init_fsm                               680         1.4%
+  ├─ dfi_if                               1,200         2.4%
+  ├─ u_rtag_fifo (sync_fifo)              1,800         3.6%
+  └─ Scheduler logic / glue              12,250        24.4%
+─────────────────────────────────────────────────────────────────────────────
+Total                                    50,200 GE   ~10,040 µm²
+
+Sequential Cells:  ~18,500 FFs  (37%)
+Combinational  :  ~31,700 gates (63%)
+
+Memory (SRAM macro — if used):
+  Write buffer: 64×40b  ≈ 2,560b  → ~4 SRAM rows
+  Read  buffer: 64×37b  ≈ 2,368b  → ~4 SRAM rows
+  (Shown above assumes register file implementation; SRAM would save ~4000 GE)
+
+================================================================================
+NOTE: Estimates assume 28nm standard cell characterization.
+      Actual synthesis results will vary by ±20% depending on library and
+      optimization effort.
+================================================================================

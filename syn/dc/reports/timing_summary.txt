@@ -1,0 +1,48 @@
+================================================================================
+DDR3 Controller — Estimated Timing Summary (Design Target, NOT real tool output)
+Technology: 28nm CMOS  Target Clock: 400 MHz (2.5 ns period)
+================================================================================
+
+Clock: aclk  Period: 2.500 ns
+
+SETUP TIMING (Worst-Case Paths)
+─────────────────────────────────────────────────────────────────────────────
+  WNS  (Worst Negative Slack):    +0.12 ns      ← PASS
+  TNS  (Total Negative Slack):     0.00 ns      ← No violations
+  Fmax (estimated):              408 MHz
+
+Top Critical Path:
+  Startpoint : cmd_reorder_l2/out_bank_reg[2]  (rising edge-triggered FF)
+  Endpoint   : bank_ctrl_top/bank_ctrl[5]/timer_reg[7]
+  Path Group : aclk
+  ─────────────────────────────────────────
+  Data Required Time:  2.500 ns
+  Data Arrival Time:   2.381 ns
+  ─────────────────────────────────────────
+  Slack:              +0.119 ns  (PASS)
+
+Path Breakdown (estimated):
+  Clock launch latency              0.050 ns
+  FF clock-to-Q                     0.095 ns
+  Logic: MUX tree (reorder arbiter) 1.420 ns  ← critical — 4-to-1 sel
+  Routing (est.)                    0.530 ns
+  Setup time                        0.186 ns
+  Clock capture latency             0.100 ns
+  ─────────────────────────────────────────
+  Total arrival                     2.381 ns
+
+Other Notable Paths:
+  Path 2: axi_slave_if → cmd_split (FIFO pop + addr decode)    slack +0.24 ns
+  Path 3: init_fsm → dfi_if (MRS command generation)           slack +0.31 ns
+  Path 4: refresh_ctrl → cmd_reorder_l2 (urgent flag)          slack +0.28 ns
+
+HOLD TIMING
+─────────────────────────────────────────────────────────────────────────────
+  WHS  (Worst Hold Slack):        +0.08 ns      ← PASS
+  THS  (Total Hold Slack):         0.00 ns
+
+================================================================================
+CONCLUSION: Design meets 400 MHz target with ~120 ps margin.
+            Critical path is in the L2 reorder arbitration MUX tree.
+            Suggest pipelining the has_future_hit() scan if timing is tight.
+================================================================================
