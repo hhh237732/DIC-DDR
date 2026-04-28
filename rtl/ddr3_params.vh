@@ -48,4 +48,23 @@
 `define CMD_MRS   3'd6
 `define CMD_ZQCL  3'd7
 
+// 初始化时序参数（仿真友好版）
+`define T_INIT_CKE_LOW   200
+`define T_INIT_TXPR      5
+`define T_INIT_TMRD      4
+`define T_INIT_TMOD      12
+`define T_INIT_ZQINIT    512
+
+// 仿真缩短版
+`define T_SIM_INIT_CKE_LOW  200
+`define T_SIM_TXPR          5
+`define T_SIM_TMOD          12
+`define T_SIM_ZQINIT        64
+
+// Outstanding 参数
+`define MAX_OUTSTANDING     4
+
+// 4KB 边界参数
+`define AXI_4KB_MASK        12
+
 `endif

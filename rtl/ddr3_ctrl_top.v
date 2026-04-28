@@ -54,7 +54,8 @@ module ddr3_ctrl_top (
     output wire [`DDR_STRB_WIDTH-1:0]   dfi_wrdata_mask,
     output wire                         dfi_wrdata_en,
     input  wire [`DDR_DQ_WIDTH-1:0]     dfi_rddata,
-    input  wire                         dfi_rddata_valid
+    input  wire                         dfi_rddata_valid,
+    output wire                         phy_clk
 );
 
     // ---------------- AXI IF ----------------
@@ -238,7 +239,8 @@ module ddr3_ctrl_top (
         .rd_data(dfi_rd_data_int), .rd_data_valid(dfi_rd_valid_int),
         .dfi_cke(dfi_cke), .dfi_cs_n(dfi_cs_n), .dfi_ras_n(dfi_ras_n), .dfi_cas_n(dfi_cas_n), .dfi_we_n(dfi_we_n),
         .dfi_bank(dfi_bank), .dfi_addr(dfi_addr), .dfi_wrdata(dfi_wrdata), .dfi_wrdata_mask(dfi_wrdata_mask), .dfi_wrdata_en(dfi_wrdata_en),
-        .dfi_rddata(dfi_rddata), .dfi_rddata_valid(dfi_rddata_valid)
+        .dfi_rddata(dfi_rddata), .dfi_rddata_valid(dfi_rddata_valid),
+        .phy_clk(phy_clk)
     );
 
     assign init_cmd_ready = dfi_cmd_ready;

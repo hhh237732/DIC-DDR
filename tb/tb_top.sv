@@ -43,6 +43,7 @@ module tb_top;
     logic dfi_wrdata_en;
     logic [31:0] dfi_rddata;
     logic dfi_rddata_valid;
+    logic phy_clk;
 
     axi_master_bfm bfm (
         .aclk(aclk), .aresetn(aresetn),
@@ -74,7 +75,8 @@ module tb_top;
         .s_axi_rid(rid), .s_axi_rdata(rdata), .s_axi_rresp(rresp), .s_axi_rlast(rlast), .s_axi_rvalid(rvalid), .s_axi_rready(rready),
         .dfi_cke(dfi_cke), .dfi_cs_n(dfi_cs_n), .dfi_ras_n(dfi_ras_n), .dfi_cas_n(dfi_cas_n), .dfi_we_n(dfi_we_n),
         .dfi_bank(dfi_bank), .dfi_addr(dfi_addr), .dfi_wrdata(dfi_wrdata), .dfi_wrdata_mask(dfi_wrdata_mask), .dfi_wrdata_en(dfi_wrdata_en),
-        .dfi_rddata(dfi_rddata), .dfi_rddata_valid(dfi_rddata_valid)
+        .dfi_rddata(dfi_rddata), .dfi_rddata_valid(dfi_rddata_valid),
+        .phy_clk(phy_clk)
     );
 
     ddr3_model mem (

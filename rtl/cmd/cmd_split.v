@@ -2,10 +2,11 @@
 `include "ddr3_params.vh"
 
 // ============================================================
-// AXI 请求拆分模块
+// AXI 请求拆分模块 v2
 // 功能：
 // 1) 将单条 AXI burst 拆分为不跨 row 的 DDR 访问子命令
-// 2) 输出统一命令描述符：{rw,id,bank,row,col,len}
+// 2) 同时检查 4KB 地址边界，防止单次 burst 跨越 4KB 边界
+// 3) 输出统一命令描述符：{rw,id,bank,row,col,len}
 // ============================================================
 module cmd_split #(
     parameter ADDR_WIDTH = `AXI_ADDR_WIDTH,
@@ -55,9 +56,21 @@ module cmd_split #(
         .byte_ofs(map_bofs)
     );
 
+    // Row boundary: remaining columns in current row
     wire [10:0] col_room = 11'd1024 - {1'b0, map_col};
-    wire [8:0]  chunk_beats = (beats_left > col_room[8:0]) ? col_room[8:0] : beats_left;
-    wire [8:0]  safe_chunk_beats = (chunk_beats == 0) ? 9'd1 : chunk_beats;
+    wire [8:0]  chunk_by_row = (beats_left > col_room[8:0]) ? col_room[8:0] : beats_left;
+
+    // 4KB boundary: bytes remaining until next 4KB boundary
+    wire [12:0] boundary_4k = 13'h1000 - {1'b0, cur_addr[11:0]};
+    // Convert byte distance to beats (divide by 4 for size=2 / 4-byte beats)
+    wire [8:0]  beats_to_4k_raw = boundary_4k[10:2];
+    // If exactly at 4KB boundary, beats_to_4k_raw wraps to 0; treat as 256
+    wire [8:0]  beats_to_4k = (beats_to_4k_raw == 9'd0) ? 9'd256 : beats_to_4k_raw;
+
+    // Final chunk: min of row constraint, 4KB constraint, beats remaining
+    wire [8:0] chunk_row_4k  = (chunk_by_row < beats_to_4k) ? chunk_by_row : beats_to_4k;
+    wire [8:0] chunk_beats   = (chunk_row_4k > beats_left) ? beats_left : chunk_row_4k;
+    wire [8:0] safe_chunk_beats = (chunk_beats == 0) ? 9'd1 : chunk_beats;
 
     assign in_ready = (!active);
 

@@ -9,7 +9,8 @@
 module axi_slave_if #(
     parameter AXI_ADDR_WIDTH = `AXI_ADDR_WIDTH,
     parameter AXI_DATA_WIDTH = `DDR_DQ_WIDTH,
-    parameter AXI_ID_WIDTH   = `AXI_ID_WIDTH
+    parameter AXI_ID_WIDTH   = `AXI_ID_WIDTH,
+    parameter MAX_OUTSTANDING = 4
 ) (
     input  wire                         aclk,
     input  wire                         aresetn,
@@ -108,8 +109,8 @@ module axi_slave_if #(
     );
 
     assign s_axi_awready = !aw_full;
-    // 简化实现：限制同一时刻仅 1 笔在途读事务，避免共享计数器歧义
-    assign s_axi_arready = !ar_full && (r_beats_rem == 0);
+    // outstanding read counter: allow up to MAX_OUTSTANDING concurrent read transactions
+    assign s_axi_arready = !ar_full && (outstanding_rd_cnt < MAX_OUTSTANDING[2:0]);
 
     wire w_full, w_empty;
     wire [WW-1:0] w_dout;
@@ -161,6 +162,7 @@ module axi_slave_if #(
     reg req_v;
     reg [REQW-1:0] req_d;
     reg [8:0] r_beats_rem;
+    reg [2:0] outstanding_rd_cnt;
 
     assign req_valid = req_v;
     assign {req_rw, req_id, req_addr, req_len, req_size, req_burst} = req_d;
@@ -172,6 +174,7 @@ module axi_slave_if #(
             aw_pop <= 1'b0;
             ar_pop <= 1'b0;
             r_beats_rem <= 9'd0;
+            outstanding_rd_cnt <= 3'd0;
         end else begin
             aw_pop <= 1'b0;
             ar_pop <= 1'b0;
@@ -181,6 +184,8 @@ module axi_slave_if #(
                     req_v  <= 1'b1;
                     req_d  <= {1'b0, ar_dout};
                     r_beats_rem <= {1'b0, ar_dout[12:5]} + 9'd1;
+                    if (outstanding_rd_cnt < 3'd7)
+                        outstanding_rd_cnt <= outstanding_rd_cnt + 1'b1;
                 end else if (!aw_empty) begin
                     aw_pop <= 1'b1;
                     req_v  <= 1'b1;
@@ -235,6 +240,8 @@ module axi_slave_if #(
                 s_axi_rresp  <= 2'b00;
                 s_axi_rlast  <= (r_beats_rem == 9'd1);
                 if (r_beats_rem != 0) r_beats_rem <= r_beats_rem - 1'b1;
+                if (r_beats_rem == 9'd1 && outstanding_rd_cnt > 3'd0)
+                    outstanding_rd_cnt <= outstanding_rd_cnt - 1'b1;
             end
         end
     end
